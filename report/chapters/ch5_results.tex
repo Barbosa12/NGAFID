@@ -246,6 +246,23 @@ indicative DL benchmarks.
     \end{tabular}
 \end{table}
 
+Figure~\ref{fig:ladder} visualizes this comparison as a single performance
+ladder, placing the best classical result of each task next to the indicative DL
+benchmark (and, for FC, the Oracle ceiling). The gap to the deep-learning
+reference widens monotonically with task difficulty: AD is nearly within reach,
+the FC Oracle ceiling closes about half the gap, and the realistic end-to-end
+cascade---limited by fault typing---remains farthest behind.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{../figures/e2e-full-ladder.png}
+    \caption{Full-project performance ladder: best classical result per task
+             (AD, FC, E2E) against the indicative deep-learning benchmark and the
+             FC Oracle ceiling. DL figures are indicative (see footnote in
+             Section~\ref{subsec:results_ad}).}
+    \label{fig:ladder}
+\end{figure}
+
 The results support the hypothesis stated in Section~\ref{sec:intro}: classical
 models with global statistical features are \textit{competitive but not
 equivalent} to DL for AD ($-$9.6\,pp vs.\ the best, within $1.8$\,pp of MMK~Net),

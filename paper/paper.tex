@@ -385,6 +385,23 @@ pipeline must improve.
     \label{fig:e2eerr}
 \end{figure*}
 
+\subsection{Overall Comparison}
+\label{subsec:ladder}
+Figure~\ref{fig:ladder} consolidates the best classical result of each task
+against the indicative DL benchmark. The pattern is monotonic in task difficulty:
+AD is nearly within reach ($-$9.6\,pp vs.\ the best DL), the FC Oracle ceiling
+closes roughly half the gap to MMK~Net, and the realistic E2E cascade---bottlenecked
+by fault typing---remains farthest from the DL reference.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.82\textwidth]{e2e-full-ladder.png}
+    \caption{Full-project performance ladder (notebook~05): best classical result
+             per task (AD, FC, E2E) against the indicative deep-learning benchmark
+             and the FC Oracle ceiling. DL figures are indicative (footnote~1).}
+    \label{fig:ladder}
+\end{figure*}
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Discussion}
 \label{sec:discussion}
