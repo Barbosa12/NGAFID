@@ -10,29 +10,29 @@ Classification (FC). The most important findings are:
 
 \begin{itemize}
     \item \textbf{Anomaly Detection is well within reach of classical ML.}
-          Logistic Regression on 184 global statistics achieves
-          F1\,=\,0.691 (AUC\,=\,0.750); a small ensemble with cross-cylinder
-          features raises this to F1\,=\,0.709. The result is interpretable,
-          laptop-trainable, and dominated by oil pressure---a physically
-          sensible early health indicator.
+          A tuned Ensemble on global statistics (Repr.~F\textsubscript{++})
+          achieves F1\,=\,0.703 (AUC\,=\,0.767); on Repr.~B the same Ensemble
+          reaches 0.691, ahead of Logistic Regression (0.679). The result is
+          interpretable, laptop-trainable, and dominated by oil pressure---a
+          physically sensible early health indicator.
 
     \item \textbf{Fault Classification is the hard, unsolved half.} Flat XGBoost
-          reaches only F1\,=\,0.121 on Repr.~B; gain-based feature selection to
-          60 features nearly doubles it to 0.227, and an Oracle K\,=\,4
-          hierarchical grouping lifts the \emph{ceiling} to 0.420. Minority fault
-          classes remain largely unrecognized under a 38:1 imbalance.
+          reaches only F1\,=\,0.116 on Repr.~B (0.176 tuned); cross-cylinder
+          features (Repr.~F\textsubscript{++}) raise the flat best to 0.207, and
+          an Oracle K\,=\,4 hierarchical grouping lifts the \emph{ceiling} to
+          0.459. Minority fault classes remain largely unrecognized under a 38:1
+          imbalance.
 
     \item \textbf{The bottleneck is fault typing, not detection.} In the
-          end-to-end cascade, 40.6\% of all errors are correct anomaly flags with
-          the wrong fault type, and improving FC has roughly twice the leverage of
-          improving AD ($\Delta_{\text{routing}}=+0.230$ vs.\
-          $\Delta_{\text{AD}}=+0.115$).
+          end-to-end cascade (F1\,=\,0.131), Stage~2 wrong-type errors are the
+          single largest error category (20.0\% of predictions), so improving FC
+          has more leverage than improving AD.
 
     \item \textbf{The remaining gap is temporal in nature.} Global statistics and
           generic time-series transforms (MiniRocket, tsfresh) plateau because
-          fault signatures are local micro-patterns living in principal components
-          12--18 ($<$0.1\% of variance). Locally restricted temporal deep learning
-          is the indicated route to close it.
+          fault signatures are local micro-patterns living in low-variance
+          principal components (PC9 and PC19--23, $<$0.1\% of variance). Locally
+          restricted temporal deep learning is the indicated route to close it.
 
     \item \textbf{The deep learning comparison must be read with caution.} The
           benchmark figures used as an upper bound come from a preprint

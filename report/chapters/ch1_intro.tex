@@ -82,12 +82,12 @@ The main contributions of this work are:
           inter-cylinder features (CHT/EGT spreads and ratios) as the most
           informative additions beyond global per-sensor statistics.
     \item A hierarchical fault classification experiment (Oracle K\,=\,4) that
-          raises the classical ceiling from F1\,=\,0.121 to F1\,=\,0.420 through
-          physics-based fault grouping, closing over half the gap to the DL best
-          (MMK~Net, F1\,=\,0.623) without any temporal modeling.
-    \item An end-to-end error decomposition showing that 40.6\% of E2E errors
-          originate in Stage~2 (wrong fault type), identifying fault classification
-          as the bottleneck for future improvement.
+          raises the classical ceiling from a flat best of F1\,=\,0.207 to
+          F1\,=\,0.459 through physics-based fault grouping, closing over half the
+          gap to the DL best (MMK~Net, F1\,=\,0.623) without any temporal modeling.
+    \item An end-to-end error decomposition showing that Stage~2 wrong-type errors
+          are the single largest error category (20.0\% of predictions),
+          identifying fault classification as the bottleneck for future improvement.
 \end{enumerate}
 
 \subsection{Report Organization}

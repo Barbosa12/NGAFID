@@ -74,16 +74,17 @@ classical models (Logistic Regression, SVM, XGBoost, Random Forest) are trained
 on flight-level statistical feature representations and benchmarked against
 deep learning models reported in the literature, including ConvTokMHSA, MMK~Net,
 and the LMSD framework \cite{lmsd2025}. Our best classical system achieves
-F1~=~0.691 on AD (Logistic Regression, 184 features) and F1~=~0.420 on FC
-(Oracle K\,=\,4 hierarchical grouping), versus the published DL figures of 0.799
-and 0.623 respectively---figures we treat as indicative only, since the source
-preprint was subsequently withdrawn by its authors over metric-computation flaws.
-The analysis shows that global statistical features are competitive for binary
-detection, but a sizeable gap persists on FC because fault signatures concentrate
-in the 12th--18th principal components, contributing less than 0.1\% of total
-variance and remaining largely invisible to global statistics. The end-to-end
-pipeline achieves F1~=~0.184, limited primarily by Stage~2 fault classification
-errors (40.6\% of all errors).
+F1~=~0.703 on AD (tuned Ensemble, 224 features) and, on FC, F1~=~0.207 for a flat
+classifier and F1~=~0.459 for an Oracle K\,=\,4 hierarchical ceiling, versus the
+indicative DL figures of 0.799 and 0.623 respectively---figures we treat as
+indicative only, since the source preprint was subsequently withdrawn by its
+authors over metric-computation flaws. The analysis shows that global statistical
+features are competitive for binary detection, but a sizeable gap persists on FC
+because fault signatures concentrate in low-variance principal components (notably
+PC9 and PC19--23), contributing less than 0.1\% of total variance and remaining
+largely invisible to global statistics. The end-to-end pipeline achieves
+F1~=~0.131, with fault typing (Stage~2 wrong-type errors, 20.0\% of predictions)
+the dominant error source.
 \end{abstract}
 
 \tableofcontents

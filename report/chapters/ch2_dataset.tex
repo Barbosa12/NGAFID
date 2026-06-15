@@ -141,12 +141,13 @@ classification approach \cite{convtok2023, lmsd2025}.
 \subsubsection{Target Component Sparsity}
 
 When the feature matrix $\mathbf{X}$ is projected into principal component space,
-fault-discriminative information concentrates in components 12--18, which
-together account for \textbf{less than 0.1\% of total variance}. The dominant
-components (PCs 1--11) capture operational variability common to both healthy and
-anomalous flights---altitude profile, throttle inputs, ambient temperature
-effects---and actively \textit{mask} the fault signatures that classifiers need
-to detect.
+fault-discriminative information concentrates in low-variance components (notably
+PC9 and PC19--23 by per-component $F$-statistic), which each account for
+\textbf{less than 0.1\% of total variance}. The dominant high-variance components
+(PC1--PC2) capture operational variability common to both healthy and anomalous
+flights---altitude profile, throttle inputs, ambient temperature effects---and are
+nearly non-discriminative, masking the fault signatures that classifiers need to
+detect.
 
 Empirically, the Repr.~B feature matrix (184 features) requires \textbf{51
 principal components} to explain 95\% of its variance. This high intrinsic

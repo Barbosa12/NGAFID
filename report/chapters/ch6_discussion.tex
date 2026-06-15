@@ -8,21 +8,21 @@
 
 The results carry a clear operational message: the two halves of the diagnosis
 problem are \emph{not} equally hard, and they should not be treated as a single
-modeling task. For \textbf{Anomaly Detection}, a plain Logistic Regression on
-184 global statistics reaches F1\,=\,0.691 with full interpretability and
-millisecond inference. This is already a deployable safety screen: it can flag
-roughly seven of every ten anomalous flights for human review using nothing more
-than per-sensor means, spreads, and trends. The single most discriminative
+modeling task. For \textbf{Anomaly Detection}, a tuned Ensemble on global
+statistics reaches F1\,=\,0.703 (and a plain Logistic Regression 0.679) with full
+interpretability and millisecond inference. This is already a deployable safety
+screen: it can flag roughly seven of every ten anomalous flights for human review
+using nothing more than per-sensor means, spreads, and trends. The single most discriminative
 channel---oil pressure (\texttt{E1 OilP})---matches the physical intuition that
 lubrication state is the primary early indicator of engine health, which gives
 maintenance engineers a defensible reason to trust the flag.
 
 For \textbf{Fault Classification}, the picture is different and arguably more
 important to state honestly. Even with feature selection and an Oracle
-hierarchical grouping, the classical ceiling (F1\,=\,0.420) leaves the majority
-of the 19 fault types poorly recognized, and several minority classes are never
-recovered at all (Table~\ref{tab:perclass}). The end-to-end consequence is
-concrete: of the flights our cascade gets wrong, \emph{40.6\%} are correctly
+hierarchical grouping, the classical ceiling (F1\,=\,0.459) leaves the majority
+of the 19 fault types poorly recognized, with most minority classes only
+partially recovered. The end-to-end consequence is
+concrete: of the flights our cascade gets wrong, \emph{40\%} are correctly
 flagged as anomalous but assigned the \emph{wrong} fault type
 (Table~\ref{tab:error_decomp}). Such an error does not endanger the aircraft---it
 is still grounded for inspection---but it misdirects the maintenance action and
@@ -58,8 +58,9 @@ preprint, which was \emph{withdrawn by its own authors} over acknowledged
 metric-computation procedures.'' We deliberately retained the comparison because
 the \emph{qualitative} story---global context helps AD, local micro-patterns help
 FC---is corroborated independently by \cite{convtok2023} and by our own ablations
-(global-attention ConvTokMHSA scoring \emph{below} flat XGBoost on FC). But the
-precise gap magnitudes (9\,pp on AD, 20\,pp on FC) should be read as provisional.
+(global-attention ConvTokMHSA, 0.208, scoring at the level of flat XGBoost on FC).
+But the precise gap magnitudes (9.6\,pp on AD, 16\,pp on FC at the Oracle ceiling)
+should be read as provisional.
 If anything, the withdrawal strengthens the case for our classical baselines:
 when a state-of-the-art result is retracted, a transparent, reproducible,
 laptop-trainable system that reports honest cross-validated variance becomes more
@@ -117,7 +118,7 @@ Three limitations bound our conclusions. First, all results use the 2-day
 benchmark subset (11{,}446 flights, 19 classes); the full 36-class NGAFID is more
 imbalanced and would likely lower every score. Second, the Oracle K\,=\,4 result
 is an \emph{upper bound}: it assumes the coarse fault group is known at test time,
-so the F1\,=\,0.420 figure is a ceiling, not a deployable number. Third, and most
+so the F1\,=\,0.459 figure is a ceiling, not a deployable number. Third, and most
 importantly, our deep learning reference points inherit the reliability problem of
 the withdrawn source preprint \cite{lmsd2025}; the comparison is directionally
 sound but not numerically definitive.
@@ -126,12 +127,12 @@ sound but not numerically definitive.
 \label{subsec:future}
 
 The error decomposition makes the priority unambiguous: \textbf{fault
-classification is the bottleneck}, with twice the end-to-end leverage of anomaly
-detection. The clearest next steps are (i) training a locally restricted temporal
+classification is the bottleneck}---Stage~2 wrong-type errors are the single
+largest error category (20.0\% of predictions). The clearest next steps are (i) training a locally restricted temporal
 model (MMK-style micro-kernel CNN in Keras/TensorFlow) on the raw sequences to
 test whether the FC gap is genuinely temporal; (ii) re-running the full benchmark
 once corrected LMSD results are published, to re-anchor the comparison on
 trustworthy numbers; and (iii) addressing the 38:1 class imbalance directly
 through resampling or cost-sensitive losses, since the long tail---not model
-capacity alone---drives the minority-class failures observed in
-Table~\ref{tab:perclass}.
+capacity alone---drives the minority-class failures observed in the per-class
+analysis (notebook~04).
