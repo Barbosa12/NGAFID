@@ -32,3 +32,6 @@ paper/build/
 *.bak
 .idea/
 .vscode/
+
+# JupyterLab virtual documents
+.virtual_documents/
