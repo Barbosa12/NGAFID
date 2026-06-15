@@ -1,0 +1,37 @@
+Model,Repr,F1,AUC,FNR,FPR,Tuned,Note
+ConvTokMHSA,Repr A,0.799,,0.163,,—,DL paper
+InceptionTime,Repr A,0.784,,0.196,,—,DL paper
+MMK Net,Repr A,0.721,,0.298,,—,DL paper
+Ensemble,Repr F++,0.703,0.767,0.307,0.287,✓,tuned
+Ensemble,Repr F++,0.697,0.762,0.314,0.292,,
+Ensemble,Repr Bseg3,0.693,0.758,0.322,0.291,,
+Ensemble,Repr B,0.691,0.754,0.322,0.296,✓,tuned
+Ensemble,Repr B,0.689,0.757,0.322,0.3,,
+Ensemble,Repr Bseg3,0.687,0.751,0.329,0.296,✓,tuned
+XGBoost,Repr F++,0.687,0.756,0.317,0.308,,
+Ensemble,Repr Bseg5,0.687,0.75,0.332,0.293,,
+Ensemble,Repr Bseg10,0.68,0.746,0.334,0.306,,
+LR,Repr B,0.679,0.73,0.308,0.333,,
+LR,Repr F++,0.678,0.732,0.31,0.333,,
+XGBoost,Repr B,0.675,0.742,0.33,0.321,,
+Linear SVM,Repr B,0.675,0.726,0.347,0.303,,
+Linear SVM,Repr F++,0.673,0.726,0.349,0.304,,
+Linear SVM,Repr Bseg5,0.672,0.723,0.359,0.297,,
+XGBoost,Repr Bseg3,0.67,0.736,0.339,0.32,,
+Linear SVM,Repr Bseg3,0.668,0.723,0.358,0.305,,
+LR,Repr Bseg3,0.667,0.717,0.328,0.338,,
+LR,Repr Bseg5,0.666,0.715,0.335,0.332,,
+XGBoost,Repr Bseg5,0.659,0.72,0.341,0.34,,
+LR,Repr Bseg10,0.655,0.704,0.35,0.339,,
+XGBoost,Repr Bseg10,0.653,0.719,0.351,0.343,,
+Linear SVM,Repr Bseg10,0.653,0.704,0.384,0.309,,
+Random Forest,Repr B,0.651,0.707,0.4,0.298,,
+Random Forest,Repr F++,0.649,0.712,0.397,0.305,,
+Random Forest,Repr Bseg3,0.637,0.693,0.418,0.305,,
+Random Forest,Repr Bseg5,0.624,0.678,0.423,0.328,,
+Random Forest,Repr Bseg10,0.617,0.668,0.42,0.344,,
+kNN,Repr F++,0.549,0.566,0.479,0.422,,
+kNN,Repr B,0.545,0.562,0.477,0.431,,
+kNN,Repr Bseg3,0.53,0.543,0.496,0.443,,
+kNN,Repr Bseg5,0.526,0.531,0.49,0.457,,
+kNN,Repr Bseg10,0.521,0.535,0.551,0.402,,

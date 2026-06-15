@@ -1,0 +1,178 @@
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Feature Engineering}
+\label{sec:features}
+% ─────────────────────────────────────────────────────────────────────────────
+
+A central challenge in applying classical ML to variable-length time series is
+the extraction of a fixed-size feature vector that captures diagnostically
+relevant information while discarding operational noise. This section describes
+the hierarchy of representations developed for NGAFID, from a simple global
+statistics baseline to temporal shape descriptors.
+
+\subsection{Representation B: Global Per-Sensor Statistics}
+\label{subsec:reprB}
+
+The foundational representation compresses each flight's
+$\mathbf{X} \in \mathbb{R}^{2048 \times 23}$ into a fixed vector by computing
+eight aggregate statistics per sensor channel:
+
+\begin{equation}
+    \phi(\mathbf{x}_j) = \bigl[\mu_j,\ \sigma_j,\ x_j^{\min},\ x_j^{\max},\
+        r_j,\ \text{skew}_j,\ \text{kurt}_j,\ \hat{\beta}_j\bigr]
+    \label{eq:reprB_stats}
+\end{equation}
+
+where $\mathbf{x}_j \in \mathbb{R}^{2048}$ is the time series for sensor $j$,
+$\mu_j$ is the mean, $\sigma_j$ the standard deviation, $r_j = x_j^{\max} -
+x_j^{\min}$ the range, and $\hat{\beta}_j$ the ordinary least-squares slope of
+a linear trend fit to the time series (computed via the closed-form formula
+$\hat{\beta} = \frac{\sum_t (t - \bar{t})(x_t - \mu)}{\sum_t (t - \bar{t})^2}$
+for efficiency).
+
+Concatenating these eight statistics over all 23 channels yields:
+\begin{equation}
+    \mathbf{f}^{(B)} \in \mathbb{R}^{184}, \quad
+    184 = 23 \times 8
+    \label{eq:reprB_dim}
+\end{equation}
+
+\paragraph{Missing values.} Raw features contain 1{,}164 NaN values (across the
+full 11{,}446-flight dataset), arising from sensor drop-outs on individual
+flights. These are imputed with the column-wise median of the training fold,
+reducing NaN count to zero before model fitting.
+
+\paragraph{Build time.} Computing Repr.~B for 11{,}446 flights takes
+approximately 185\,s on a standard laptop. The linear slope is computed using a
+fast closed-form expression (approximately $5\times$ faster than
+\texttt{numpy.polyfit}).
+
+\paragraph{PCA analysis.} When Repr.~B is projected into principal component
+space, \textbf{51 components} are needed to explain 95\% of the variance. This
+indicates a high-dimensional structure with no single dominant direction, and
+confirms that fault signatures---concentrated in PCs 12--18 at $<$0.1\% of
+total variance---are effectively buried by the operational variability captured
+in the top components.
+
+\subsection{Representation B\textsubscript{seg}: Temporal Segmentation}
+\label{subsec:reprBseg}
+
+Repr.~B discards all temporal structure: a mean of 3{,}500\,RPM is the same
+whether the engine stayed at that value throughout the flight or ramped up and
+then down. To reintroduce \textit{temporal ordering} while remaining within the
+classical ML framework, each flight is divided into $N$ equal-length segments
+and Repr.~B statistics are computed independently on each segment.
+
+Formally, for a flight of 2{,}048 steps divided into $N$ segments of $L = 2048/N$
+steps each, the segmented feature vector is:
+\begin{equation}
+    \mathbf{f}^{(B_{\text{seg}})} = \bigl[\phi(\mathbf{x}_j^{(1)}),\ \ldots,\
+        \phi(\mathbf{x}_j^{(N)})\bigr]_{j=1}^{23}
+        \in \mathbb{R}^{23 \times 8 \times N}
+\end{equation}
+
+Table~\ref{tab:reprBseg} summarizes the feature counts and temporal granularity
+for each segmentation level.
+
+\begin{table}[H]
+    \centering
+    \caption{Repr.~B\textsubscript{seg} configurations.}
+    \label{tab:reprBseg}
+    \begin{tabular}{cccc}
+        \toprule
+        $N_{\text{seg}}$ & \textbf{Features} & \textbf{Temporal resolution} & \textbf{Segment length} \\
+        \midrule
+        1  &    184 & None (global) & 2{,}048 steps \\
+        3  &    552 & Thirds of flight & 682 steps \\
+        5  &    920 & Fifths of flight & 409 steps \\
+        10 & 1{,}840 & Tenths of flight & 204 steps \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The hypothesis is that the \textit{evolution} of sensor statistics across
+flight thirds or fifths carries diagnostic information beyond the global
+distribution.
+
+\subsection{Representation F\textsubscript{++}: Cross-Physical Features}
+\label{subsec:reprFpp}
+
+Beyond per-sensor statistics, physically meaningful relationships between
+sensors can provide additional discriminative power. Repr.~F\textsubscript{++}
+extends Repr.~B with a set of \textit{inter-cylinder features}:
+
+\begin{itemize}
+    \item \textbf{Spread:} Maximum minus minimum across the four CHT (and four
+          EGT) channels at each time step, then summarized with the same eight
+          statistics. A large CHT spread indicates uneven combustion or a
+          failing cylinder---a fault signature invisible to per-channel averages.
+    \item \textbf{Coefficient of variation:} $\text{CV} = \sigma / \mu$ for
+          CHT and EGT cross-cylinder variability.
+    \item \textbf{Cross-cylinder ratios:} Pairwise ratios (e.g.,
+          CHT1/CHT2, EGT1/EGT2) under statistical summaries.
+    \item \textbf{Extended statistics on extremes:} Slope and range computed on
+          the per-window max and min envelopes, capturing transient events missed
+          by global statistics.
+\end{itemize}
+
+This brings the total feature count to \textbf{224 features}. For the FC task,
+XGBoost gain-based feature selection further reduces this to \textbf{60 features}
+(Repr.~F), eliminating low-information channels while preserving the most
+discriminative ones. The top 5 features by XGBoost information gain are:
+\texttt{E1 FFlow\_min}, \texttt{OAT\_min}, \texttt{amp2\_mean},
+\texttt{amp2\_min}, and \texttt{volt2\_min}.
+
+\subsection{Representations G and H: Temporal Shape}
+\label{subsec:reprGH}
+
+Global statistics and inter-cylinder features cannot capture the
+\textit{shape} of sensor trajectories: whether a temperature curve rises
+monotonically or fluctuates, whether RPM has a characteristic oscillation
+frequency, or whether fuel flow drops abruptly at a specific flight phase. To
+address this, two time-series transformation approaches are explored.
+
+\subsubsection{Representation G: MiniRocket}
+
+MiniRocket \cite{minirocket2021} transforms each univariate time series into a
+high-dimensional feature vector using a large bank of random convolutional kernels
+(default: 10{,}000) with dilated receptive fields. For each kernel applied to
+each of the 23 sensor channels:
+\begin{equation}
+    f_k = \text{PPV}\bigl(\mathbf{x}_j * \mathbf{w}_k\bigr) =
+        \frac{1}{T}\sum_{t} \mathbf{1}\bigl[(\mathbf{x}_j * \mathbf{w}_k)_t > 0\bigr]
+\end{equation}
+where PPV (Proportion of Positive Values) is a simple pooling that is both
+fast to compute and highly discriminative. The resulting Repr.~G vector has
+approximately 10{,}000 features per flight.
+
+Repr.~G\textsubscript{++} further concatenates the MiniRocket features with
+Repr.~F\textsubscript{++}, yielding $\sim$10{,}224 features.
+
+\subsubsection{Representation H: tsfresh}
+
+tsfresh \cite{tsfresh2018} computes a comprehensive library of time-series
+features per channel, including autocorrelation coefficients at multiple lags,
+FFT spectral peaks, entropy measures, nonlinearity statistics, and
+linear/nonlinear trend indicators. The feature count varies depending on the
+selected feature set but is on the order of hundreds to thousands per channel.
+
+Table~\ref{tab:repr_summary} summarizes all representations and their key
+properties.
+
+\begin{table}[H]
+    \centering
+    \caption{Summary of feature representations.}
+    \label{tab:repr_summary}
+    \begin{tabular}{llcp{5.5cm}}
+        \toprule
+        \textbf{Repr.} & \textbf{Method} & \textbf{Dim.} & \textbf{What it captures} \\
+        \midrule
+        B                & Global stats (8 per sensor)  & 184     & Magnitude, spread, trend of full flight \\
+        B\textsubscript{seg} & B applied to $N$ segments & 552--1840 & Temporal evolution of global stats \\
+        F\textsubscript{++} & B + cross-cylinder features & 224   & Inter-cylinder asymmetry and ratios \\
+        F               & F\textsubscript{++} + XGB gain selection & 60 & Most discriminative 60 features \\
+        G               & MiniRocket kernels           & $\sim$10k & Temporal shape via random convolutions \\
+        H               & tsfresh                      & $\sim$var & Autocorrelation, FFT, entropy, nonlinearity \\
+        G\textsubscript{++} & G + F\textsubscript{++}  & $\sim$10k+ & Temporal shape + cross-physical \\
+        \bottomrule
+    \end{tabular}
+\end{table}

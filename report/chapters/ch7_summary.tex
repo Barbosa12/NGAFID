@@ -1,0 +1,47 @@
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Summary}
+\label{sec:summary}
+% ─────────────────────────────────────────────────────────────────────────────
+
+This study asked whether classical machine learning on flight-level statistical
+features can diagnose aircraft engine health on the real-world NGAFID Cessna-172
+benchmark, decomposed into binary Anomaly Detection (AD) and 19-class Fault
+Classification (FC). The most important findings are:
+
+\begin{itemize}
+    \item \textbf{Anomaly Detection is well within reach of classical ML.}
+          Logistic Regression on 184 global statistics achieves
+          F1\,=\,0.691 (AUC\,=\,0.750); a small ensemble with cross-cylinder
+          features raises this to F1\,=\,0.709. The result is interpretable,
+          laptop-trainable, and dominated by oil pressure---a physically
+          sensible early health indicator.
+
+    \item \textbf{Fault Classification is the hard, unsolved half.} Flat XGBoost
+          reaches only F1\,=\,0.121 on Repr.~B; gain-based feature selection to
+          60 features nearly doubles it to 0.227, and an Oracle K\,=\,4
+          hierarchical grouping lifts the \emph{ceiling} to 0.420. Minority fault
+          classes remain largely unrecognized under a 38:1 imbalance.
+
+    \item \textbf{The bottleneck is fault typing, not detection.} In the
+          end-to-end cascade, 40.6\% of all errors are correct anomaly flags with
+          the wrong fault type, and improving FC has roughly twice the leverage of
+          improving AD ($\Delta_{\text{routing}}=+0.230$ vs.\
+          $\Delta_{\text{AD}}=+0.115$).
+
+    \item \textbf{The remaining gap is temporal in nature.} Global statistics and
+          generic time-series transforms (MiniRocket, tsfresh) plateau because
+          fault signatures are local micro-patterns living in principal components
+          12--18 ($<$0.1\% of variance). Locally restricted temporal deep learning
+          is the indicated route to close it.
+
+    \item \textbf{The deep learning comparison must be read with caution.} The
+          benchmark figures used as an upper bound come from a preprint
+          \cite{lmsd2025} that was later withdrawn by its authors over
+          metric-computation flaws; the qualitative conclusions hold, but the
+          exact gap magnitudes are provisional.
+\end{itemize}
+
+In short, classical ML delivers a deployable anomaly screen for general-aviation
+condition-based maintenance today, while reliable fault attribution awaits
+temporal models and a re-validated benchmark. All code is available at
+\url{https://github.com/Barbosa12/NGAFID}.

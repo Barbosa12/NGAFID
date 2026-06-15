@@ -1,0 +1,4 @@
+Architecture,Repr,F1-macro20,±std,AD-recall,Type
+LMSD (ConvTok→MMK),Repr A,0.623,—,0.837,DL paper
+Cascade AD→FC,Repr F++,0.131,0.026,0.688,classical
+Direct 20-class,Repr F++,0.113,0.012,0.509,classical

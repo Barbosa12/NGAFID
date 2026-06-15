@@ -1,0 +1,4 @@
+Task,Config,FC-stage,F1-macro,±std,AD-recall
+E2E,baseline,XGB + class_weight,0.122,0.029,0.688
+E2E,best-for-XGB,XGB + RUS moderate,0.155,0.016,0.688
+E2E,best-overall,RF + SMOTE+Tomek,0.235,0.017,0.688

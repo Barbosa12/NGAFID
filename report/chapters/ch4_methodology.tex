@@ -1,0 +1,210 @@
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Methodology}
+\label{sec:methodology}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Problem Formulation}
+\label{subsec:formulation}
+
+Given a flight represented as a feature vector
+$\mathbf{f} \in \mathbb{R}^d$ (from any representation in
+Section~\ref{sec:features}), the system must produce one of 20 diagnostic labels:
+
+\begin{equation}
+    \hat{y} \in \{0, 1, 2, \ldots, 19\}
+\end{equation}
+
+where label 0 denotes a \textit{healthy} flight and labels 1--19 denote the
+19 fault categories of Table~\ref{tab:class_dist}. This 20-class problem is
+decomposed into two sequential sub-tasks:
+
+\begin{enumerate}
+    \item \textbf{Anomaly Detection (AD):} Binary classification,
+          $y_{\text{AD}} \in \{0 = \text{healthy},\ 1 = \text{anomaly}\}$.
+    \item \textbf{Fault Classification (FC):} 19-class classification,
+          $y_{\text{FC}} \in \{1, 2, \ldots, 19\}$, performed \textit{only} on
+          flights flagged as anomalous by the AD stage.
+\end{enumerate}
+
+\subsection{Two-Stage Diagnosis Pipeline}
+\label{subsec:pipeline}
+
+The two-stage cascade architecture is motivated by the observation that AD and
+FC require fundamentally different inductive biases: AD benefits from global
+whole-flight context, while FC requires local fault-specific pattern resolution
+\cite{lmsd2025}. Jointly optimizing both objectives in a single model leads to
+a conflict where the global context needed for AD suppresses the local fault
+signatures needed for FC.
+
+The pipeline routes each incoming flight through Stage~1 (AD). Only flights
+classified as anomalous proceed to Stage~2 (FC). Healthy flights receive label 0
+and bypass the fault classifier entirely.
+
+Figure~\ref{fig:pipeline} illustrates the architecture.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        every node/.style={align=center, font=\small},
+        box/.style={draw, rounded corners=3pt, minimum width=2.2cm,
+                    minimum height=0.8cm, inner sep=5pt},
+        arr/.style={-{Stealth[length=5pt]}, thick},
+        node distance=0.7cm and 1.3cm
+    ]
+        \node[box, fill=gray!15]   (raw)  {Flight\\(features $\mathbf{f}$)};
+        \node[box, fill=blue!10, right=of raw]  (ad)   {\textbf{Stage 1}\\AD model};
+        \node[box, fill=green!15, above right=0.4cm and 1.2cm of ad] (h)
+              {Label 0\\HEALTHY};
+        \node[box, fill=orange!15, below right=0.4cm and 1.2cm of ad] (fc)
+              {\textbf{Stage 2}\\FC model};
+        \node[box, fill=red!12, right=of fc] (fault) {Labels 1--19\\fault type};
+        \draw[arr] (raw) -- (ad);
+        \draw[arr] (ad)  -- node[above,font=\scriptsize,sloped]{healthy} (h);
+        \draw[arr] (ad)  -- node[below,font=\scriptsize,sloped]{anomaly} (fc);
+        \draw[arr] (fc)  -- (fault);
+    \end{tikzpicture}
+    \caption{Two-stage diagnosis pipeline. Stage~1 (AD) routes flights to the
+             healthy label or to Stage~2 (FC) for fault type identification.}
+    \label{fig:pipeline}
+\end{figure}
+
+\subsection{Classical Models}
+\label{subsec:classical}
+
+Five classical scikit-learn models are evaluated on both the AD and FC tasks:
+
+\paragraph{Logistic Regression (LR).}
+A linear probabilistic classifier trained by maximizing the regularized
+log-likelihood. The decision boundary is a hyperplane in feature space:
+$\hat{p}(y=1 \mid \mathbf{f}) = \sigma(\mathbf{w}^\top \mathbf{f} + b)$,
+where $\sigma$ is the sigmoid function. LR is interpretable, fast to train,
+and robust to high-dimensional sparse features. The L2 regularization strength
+$C$ is tuned per fold.
+
+\paragraph{Linear Support Vector Machine (LinearSVM).}
+Finds the maximum-margin hyperplane separating the two classes. Under class
+imbalance, the \texttt{class\_weight=`balanced'} option rescales the hinge loss
+by inverse class frequency. LinearSVM is equivalent to LR in the linear limit but
+optimizes the margin directly rather than the log-likelihood.
+
+\paragraph{XGBoost (XGB).}
+An ensemble of gradient-boosted decision trees \cite{xgboost2016}. XGBoost
+captures nonlinear feature interactions and implicitly handles feature
+importance through its information-gain-based splitting criterion. The
+\texttt{scale\_pos\_weight} parameter balances positive and negative class
+weights for AD; \texttt{class\_weight=`balanced'} is used for FC.
+
+\paragraph{Random Forest (RF).}
+A bagged ensemble of decision trees with feature subsampling at each split.
+RF provides implicit feature selection through out-of-bag importance scores
+and is robust to irrelevant features---important given that Repr.~B contains
+184 dimensions of which many are low-information for specific fault types.
+
+\paragraph{K-Nearest Neighbors (KNN).}
+Distance-based classifier that assigns the majority label among the $k$ nearest
+neighbors in feature space. KNN serves as a sanity-check baseline; its
+performance is sensitive to the feature scale and to the curse of dimensionality
+in high-dimensional representations.
+
+\subsection{Deep Learning Benchmarks}
+\label{subsec:dl}
+
+Three deep learning architectures from the NGAFID benchmark paper
+\cite{convtok2023, lmsd2025} serve as upper-bound comparisons. Unlike
+classical models, these operate directly on the raw 2{,}048-step time series,
+preserving all temporal resolution.
+
+\paragraph{ConvTokMHSA.}
+The ConvTok framework \cite{convtok2023} first tokenizes the multivariate time
+series into non-overlapping patches using 1D CNN encoders that capture local
+shape descriptors. The tokens are then processed by a Multi-Head Self-Attention
+(MHSA) layer with full global receptive field---every token attends to every
+other token across the entire flight. This global aggregation is optimal for AD,
+where the overall health state is determined by the coherence of the whole-flight
+profile (F1\,=\,0.799). However, it suffers on FC because cross-stage
+operational noise dilutes weak local fault signatures (F1\,=\,0.208).
+
+\paragraph{MMK Net.}
+The Multi-Micro Kernel Network \cite{lmsd2025} employs parallel 1D convolutions
+with micro-scale kernels ($k = 1, 3, 5$) that explicitly restrict the receptive
+field to local temporal windows. This constraint prevents operational noise from
+dominating and isolates micro-pattern fault signatures. MMK~Net deliberately
+omits pooling layers to preserve temporal resolution, and uses LayerNorm instead
+of BatchNorm to stabilize training under severe class imbalance. It achieves the
+best FC performance (F1\,=\,0.623).
+
+\paragraph{LMSD.}
+The Long-Micro Scale Diagnostician \cite{lmsd2025} is the state-of-the-art
+end-to-end architecture that explicitly operationalizes the two-stage decomposition
+principle. It uses ConvTokMHSA (global receptive field) for Stage~1 AD and
+MMK~Net (restricted receptive field) for Stage~2 FC, connected by a
+\textit{hard-threshold routing mechanism} that enforces dimensional isolation:
+healthy samples trigger a label-0 output with the fault dimensions masked to
+$-\infty$, completely bypassing the FC head. Training is decoupled: the AD head
+trains on all 11{,}446 flights, while the FC head trains exclusively on the
+5{,}601 anomalous flights, preventing the large healthy class from suppressing
+gradient signals for rare fault classes.
+
+\subsection{Oracle Hierarchical Classification}
+\label{subsec:oracle}
+
+An additional experiment assesses the theoretical ceiling achievable through
+physics-based fault grouping. Ward hierarchical clustering is applied to the
+class-conditional feature centroids, grouping the 19 fault classes into $K$
+physically coherent super-groups. A separate XGBoost classifier is then trained
+for each group on the anomalous flights belonging to that group.
+
+This \textit{Oracle} configuration uses ground-truth group labels at test time
+(i.e., it knows which group a fault belongs to), providing an upper bound for
+the hierarchical approach. The K\,=\,4 solution partitions the 19 classes as:
+
+\begin{itemize}
+    \item \textbf{Group 0} (156 flights): Classes 10, 12 --- cylinder structural failures
+    \item \textbf{Group 1} (2{,}476 flights): Classes 6, 8, 14, 17 --- engine operational issues
+    \item \textbf{Group 2} (2{,}875 flights): Classes 0--5, 7, 9, 11, 15, 16, 18 --- baffle/intake/engine maintenance
+    \item \textbf{Group 3} (94 flights): Class 13 --- overspeed events
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+\label{subsec:metrics}
+
+\subsubsection{F1-macro Score}
+
+The primary metric is the \textbf{macro-averaged F1 score}:
+\begin{equation}
+    F1_{\text{macro}} = \frac{1}{K}\sum_{k=1}^{K} \frac{2 P_k R_k}{P_k + R_k}
+\end{equation}
+where $P_k$ and $R_k$ are precision and recall for class $k$, and $K$ is the
+number of classes. Macro averaging treats all classes equally regardless of
+support, making it sensitive to performance on minority fault classes---which
+is precisely what matters for fault detection in long-tailed distributions.
+
+\subsubsection{Area Under the ROC Curve (AUC)}
+
+For AD, the AUC summarizes discrimination ability across all decision thresholds
+and is reported alongside F1. AUC is threshold-independent and provides a
+complementary view to F1 under varying operating points.
+
+\subsubsection{False Negative Rate (FNR)}
+
+The False Negative Rate measures the fraction of anomalous flights incorrectly
+classified as healthy:
+\begin{equation}
+    \text{FNR} = \frac{FN}{FN + TP}
+\end{equation}
+In an aviation safety context, a false negative---a missed fault---is far more
+consequential than a false positive (unnecessary inspection). FNR is therefore
+a primary safety metric.
+
+\subsubsection{MCWPM (Mission-Critical Weighted Performance Metric)}
+
+MCWPM is a safety-weighted F-score that penalizes false negatives more heavily
+than false positives:
+\begin{equation}
+    \text{MCWPM} = \frac{\alpha \cdot R + P}{\alpha + 1}
+    \label{eq:mcwpm}
+\end{equation}
+where $P$ is precision, $R$ is recall, and $\alpha = 2.5$. Under this
+parameterization, a false negative contributes $\alpha^2 = 6.25$ times more
+to the loss than a false positive. MCWPM is reported alongside F1 and FNR for
+all AD experiments to provide a safety-contextualized performance assessment.

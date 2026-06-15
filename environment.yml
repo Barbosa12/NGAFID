@@ -1,0 +1,18 @@
+# Conda environment for the NGAFID project.
+# Create with:  conda env create -f environment.yml
+# Activate with: conda activate ngafid
+name: ngafid
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy=2.2
+  - pandas=2.3
+  - scipy=1.16
+  - scikit-learn=1.7
+  - xgboost=3.2
+  - matplotlib=3.10
+  - seaborn=0.13
+  - jupyterlab
+  - notebook
+  - ipykernel

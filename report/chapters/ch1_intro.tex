@@ -1,0 +1,103 @@
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+\label{sec:intro}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Motivation}
+
+General aviation in the United States operates under a predominantly
+\textit{calendar-based} maintenance paradigm: aircraft are inspected at fixed
+intervals of hours, days, or calendar cycles regardless of the actual condition
+of their components. This reactive approach systematically fails to detect
+emerging faults between inspection windows, creating safety risks and generating
+costly unscheduled maintenance events that grounding aircraft without warning.
+
+Modern aircraft are equipped with flight data recorders (FDR) and engine control
+units (ECU) that continuously log dozens of sensor channels at 1\,Hz or higher.
+This operational data, accumulated across thousands of flight hours, encodes the
+health history of every critical subsystem. Machine learning offers a principled
+path from raw telemetry to \textit{condition-based} maintenance: instead of
+waiting for a calendar date, a model can flag anomalous flights and identify the
+likely fault category from the sensor profile alone, enabling targeted
+interventions before failure occurs.
+
+\subsection{Dataset and Scope}
+
+This project uses the \textbf{National General Aviation Flight Information
+Database (NGAFID)} \cite{ngafid2021}, a publicly available benchmark comprising
+over 28{,}000 real flights from a Cessna-172 fleet operated by an active flight
+school. NGAFID is unique among aviation health datasets in that it provides
+(i) authentic multi-sensor telemetry under real operational conditions,
+(ii) fault labels derived from verified unscheduled maintenance records
+spanning 36 distinct categories, and (iii) a standardized 5-fold cross-validation
+split designed to prevent data leakage between flights of the same aircraft
+\cite{convtok2023}.
+
+The analysis focuses on the \textit{benchmark 2-day subset}: 11{,}446 flights
+across 19 fault categories, preprocessed to fixed length via cubic spline
+interpolation to 2{,}048 time steps per flight.
+
+\subsection{Research Questions}
+
+This report investigates two core questions:
+
+\begin{enumerate}
+    \item \textbf{Anomaly Detection (AD):} Can a classical ML classifier, trained
+          on statistical features extracted from the full flight profile, reliably
+          distinguish healthy flights from anomalous ones?
+    \item \textbf{Fault Classification (FC):} Given that a flight is anomalous,
+          can the same approach identify which of 19 fault types is responsible?
+\end{enumerate}
+
+Both tasks are then composed into a single \textbf{End-to-End (E2E) diagnosis
+pipeline} that assigns one of 20 labels---\textit{healthy} or one of 19
+fault types---to any incoming flight.
+
+\subsection{Hypothesis}
+
+We hypothesize that:
+
+\begin{itemize}
+    \item For \textbf{AD}, global statistical features (mean, standard deviation,
+          slope, etc.\ over the full flight) are sufficient to characterize the
+          overall health state of the aircraft, making classical models competitive
+          with deep learning.
+    \item For \textbf{FC}, fault signatures manifest as \textit{local micro-patterns}
+          in specific temporal segments of the flight profile, contributing less
+          than 0.1\% of total variance. Global statistics discard this information,
+          creating a structural performance gap versus temporal deep learning models
+          that operate directly on the raw time series.
+\end{itemize}
+
+\subsection{Contributions}
+
+The main contributions of this work are:
+
+\begin{enumerate}
+    \item A systematic evaluation of five classical ML models across multiple
+          feature representations (Repr.~B through Repr.~F\textsubscript{++}) on
+          the NGAFID benchmark subset, with direct comparison against published
+          deep learning results \cite{lmsd2025}.
+    \item A feature engineering analysis that identifies cross-physical
+          inter-cylinder features (CHT/EGT spreads and ratios) as the most
+          informative additions beyond global per-sensor statistics.
+    \item A hierarchical fault classification experiment (Oracle K\,=\,4) that
+          raises the classical ceiling from F1\,=\,0.121 to F1\,=\,0.420 through
+          physics-based fault grouping, closing over half the gap to the DL best
+          (MMK~Net, F1\,=\,0.623) without any temporal modeling.
+    \item An end-to-end error decomposition showing that 40.6\% of E2E errors
+          originate in Stage~2 (wrong fault type), identifying fault classification
+          as the bottleneck for future improvement.
+\end{enumerate}
+
+\subsection{Report Organization}
+
+The remainder of this report is organized as follows.
+Section~\ref{sec:dataset} describes the NGAFID dataset, sensor space, class
+distribution, and key data challenges.
+Section~\ref{sec:features} presents the feature engineering pipeline and the
+hierarchy of representations from global statistics to temporal shape.
+Section~\ref{sec:methodology} details the two-stage diagnosis pipeline, the
+classical and deep learning models, and the evaluation protocol.
+Section~\ref{sec:results} reports and analyzes results for AD, FC, and E2E
+across all representations, with comparison to DL benchmarks.

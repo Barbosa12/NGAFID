@@ -1,0 +1,313 @@
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Results}
+\label{sec:results}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Anomaly Detection}
+\label{subsec:results_ad}
+
+Table~\ref{tab:ad_results} reports 5-fold cross-validation performance for all
+classical models on Repr.~B (184 features), the Ensemble variant on
+Repr.~F\textsubscript{++} (224 features), and the published DL
+benchmarks.\footnote{All deep learning figures in this report are reproduced
+from the LMSD preprint \cite{lmsd2025}. That preprint was subsequently
+\emph{withdrawn} by its authors, who stated that ``significant methodological
+flaws have been identified in the experimental validation and metric-computation
+procedures.'' We therefore present these numbers as \emph{indicative} reference
+points from the literature, not as validated upper bounds, and we interpret the
+classical-vs.-DL gaps accordingly throughout.}
+
+\begin{table}[H]
+    \centering
+    \caption{Anomaly Detection results (5-fold CV, mean $\pm$ std).
+             Best classical result in \textbf{bold}; best DL result in \textit{italics}.}
+    \label{tab:ad_results}
+    \begin{tabular}{llcccc}
+        \toprule
+        \textbf{Model} & \textbf{Repr.} & \textbf{F1} & \textbf{AUC} & \textbf{FNR} & \textbf{MCWPM} \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Classical models (this work)}} \\
+        \textbf{Logistic Reg.}  & B (184) & \textbf{0.691$\pm$0.009} & \textbf{0.750$\pm$0.008} & \textbf{0.299$\pm$0.010} & \textbf{0.532$\pm$0.009} \\
+        Linear SVM     & B (184) & 0.685$\pm$0.008 & 0.748$\pm$0.007 & 0.321$\pm$0.008 & 0.522$\pm$0.008 \\
+        XGBoost        & B (184) & 0.682$\pm$0.010 & 0.764$\pm$0.013 & 0.332$\pm$0.021 & 0.519$\pm$0.022 \\
+        Random Forest  & B (184) & 0.637$\pm$0.011 & 0.722$\pm$0.011 & 0.396$\pm$0.024 & 0.473$\pm$0.020 \\
+        KNN            & B (184) & 0.531$\pm$0.007 & 0.575$\pm$0.004 & 0.482$\pm$0.014 & 0.373$\pm$0.008 \\
+        \textbf{Ensemble}       & F\textsubscript{++} (224) & \textbf{0.709$\pm$0.004} & \textbf{0.782$\pm$0.010} & \textbf{0.287$\pm$0.014} & \textbf{0.552$\pm$0.014} \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Deep learning benchmarks (paper \cite{convtok2023})}} \\
+        \textit{ConvTokMHSA}  & raw & \textit{0.799} & --- & \textit{0.163} & --- \\
+        InceptionTime \cite{inceptiontime2020} & raw & 0.784 & --- & 0.196 & --- \\
+        MMK Net        & raw & 0.721 & --- & 0.298 & --- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Analysis}
+
+\paragraph{Best classical model.}
+Logistic Regression with Repr.~B achieves F1\,=\,0.691, AUC\,=\,0.750, and
+FNR\,=\,0.299. Its linear decision boundary over the 184-dimensional feature
+space is sufficient to capture the global health state of a flight. The
+simplicity of LR also makes it the most deployable classical option:
+fast inference, no hyperparameter sensitivity to training data, and full
+interpretability through its coefficient vector.
+
+\paragraph{Ensemble improvement.}
+Adding cross-physical inter-cylinder features (Repr.~F\textsubscript{++}) and
+combining LR with an XGBoost component raises F1 to 0.709 ($+$1.8\,pp) and
+reduces FNR to 0.287 ($-$1.2\,pp). The MCWPM improvement from 0.532 to 0.552
+reflects a meaningful gain in safety-weighted performance. This confirms that
+inter-cylinder temperature asymmetry provides information beyond per-sensor
+global statistics.
+
+\paragraph{Gap to DL.}
+The best DL model (ConvTokMHSA, F1\,=\,0.799) outperforms the best classical
+system by \textbf{9.0\,pp in F1} and \textbf{12.4\,pp in FNR}. ConvTokMHSA
+applies global self-attention over the full 2{,}048-step sequence, allowing it
+to detect subtle whole-flight coherence patterns---such as gradual thermal drift
+correlated with electrical anomalies across flight phases---that are invisible
+to any fixed-window or global statistic. This gap represents the minimum cost
+of discarding temporal structure for AD.
+
+\paragraph{Feature importance.}
+Among the 184 Repr.~B features, the five most discriminative sensors by
+classification effect size (Cohen's $d$, healthy vs.\ anomalous) are:
+\texttt{E1 OilP} ($d = 0.158$),
+\texttt{IAS} ($d = 0.097$),
+\texttt{E1 FFlow} ($d = 0.087$),
+\texttt{AltMSL} ($d = 0.079$), and
+\texttt{E1 RPM} ($d = 0.075$).
+Oil pressure is the single most discriminative channel, consistent with its
+role as the primary engine health indicator and direct sensor for lubrication
+system faults.
+
+\subsection{Fault Classification}
+\label{subsec:results_fc}
+
+Table~\ref{tab:fc_results} reports FC results on the 5{,}601 anomalous flights
+across multiple representations and models, compared to DL benchmarks.
+
+\begin{table}[H]
+    \centering
+    \caption{Fault Classification results (5-fold CV, F1-macro). Best classical in \textbf{bold}.}
+    \label{tab:fc_results}
+    \begin{tabular}{llcc}
+        \toprule
+        \textbf{Model} & \textbf{Repr.} & \textbf{F1 macro} & \textbf{Accuracy} \\
+        \midrule
+        \multicolumn{4}{l}{\textit{Classical --- Repr.~B baseline}} \\
+        XGBoost        & B (184)   & 0.121$\pm$0.005 & 0.379 \\
+        Logistic Reg.  & B (184)   & 0.097$\pm$0.009 & 0.102 \\
+        Linear SVM     & B (184)   & 0.066$\pm$0.014 & 0.066 \\
+        Random Forest  & B (184)   & 0.034$\pm$0.005 & 0.375 \\
+        \midrule
+        \multicolumn{4}{l}{\textit{Classical --- improved representations}} \\
+        \textbf{XGBoost} & \textbf{F (60)} & \textbf{0.227$\pm$0.020} & \textbf{0.404} \\
+        \textbf{Oracle K\,=\,4} & \textbf{F (60)} & \textbf{0.420$\pm$0.022} & --- \\
+        \midrule
+        \multicolumn{4}{l}{\textit{Deep learning benchmarks (paper)}} \\
+        \textit{MMK Net} \cite{lmsd2025} & raw & \textit{0.623} & --- \\
+        InceptionTime \cite{inceptiontime2020} & raw & 0.563 & --- \\
+        ConvTokSWLA    & raw & 0.523 & --- \\
+        ConvTokMHSA    & raw & 0.208 & --- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Per-Class Analysis}
+
+Table~\ref{tab:perclass} reports the per-class F1 scores for the best classical
+model (XGBoost, Repr.~B) to illustrate the long-tail performance distribution.
+
+\begin{table}[H]
+    \centering
+    \caption{Per-class F1 (XGBoost, Repr.~B). Classes sorted by sample count.}
+    \label{tab:perclass}
+    \begin{tabular}{lrr}
+        \toprule
+        \textbf{Fault Category} & \textbf{$n$} & \textbf{F1} \\
+        \midrule
+        Intake gasket leak / damage           & 2{,}097 & 0.533 \\
+        Rocker cover leak / loose / damage    & 1{,}024 & 0.364 \\
+        Baffle plug need repair               &   254   & 0.153 \\
+        Baffle screw missing / loose          &   211   & 0.139 \\
+        Oil cooler need maintenance           &    75   & 0.127 \\
+        \midrule
+        Engine seal / tube / bolt loose       &    76   & 0.098 \\
+        Cylinder crack / fail / need repair   &   108   & 0.055 \\
+        Engine run rough                      &   141   & 0.051 \\
+        Baffle tie / tie rod loose            &   144   & 0.047 \\
+        Engine idle / RPM issue               &    93   & 0.038 \\
+        Pilot / in-flight noticed issue       &    75   & 0.000 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Analysis}
+
+\paragraph{Repr.~B baseline.}
+XGBoost with Repr.~B achieves F1\,=\,0.121, classifying with reasonable accuracy
+only the two head classes (intake gasket and rocker cover), which together
+account for 55.7\% of anomalous flights. Minority classes are largely
+misclassified as the dominant class---a direct consequence of both the long-tailed
+distribution and the global statistics discarding the local fault signatures.
+
+\paragraph{Feature selection gain.}
+XGB gain-based selection to 60 features (Repr.~F) nearly \textit{doubles} F1
+from 0.121 to 0.227 ($+$88\%). This improvement demonstrates that the 124
+features removed from Repr.~B were actively harmful---they added noise that
+confused the classifier---rather than simply uninformative. The 60 retained
+features are dominated by electrical channels (\texttt{amp2}, \texttt{volt2})
+and fuel flow extrema (\texttt{E1 FFlow\_min}), highlighting the diagnostic
+relevance of transient low values in these channels.
+
+\paragraph{Oracle hierarchical ceiling.}
+Grouping the 19 classes into 4 physically coherent groups via Ward clustering
+and training a per-group XGBoost raises F1 to 0.420 ($+$96\% over flat XGB
+with Repr.~F). This result quantifies the theoretical gain from perfect fault
+taxonomy knowledge: if the type of fault were known at the coarse level
+(engine operational vs.\ baffle/intake maintenance), the intra-group
+classification becomes substantially easier because groups share similar sensor
+signatures.
+
+\paragraph{Structural gap to DL.}
+Despite the Oracle improvement to 0.420, the best DL model (MMK~Net,
+F1\,=\,0.623) still exceeds the classical ceiling by \textbf{20\,pp}. This
+residual gap is structural: MMK~Net's micro-kernel convolutions ($k = 1, 3, 5$)
+with no pooling extract local temporal signatures at the time step level, while
+even the Oracle hierarchical approach is constrained by the information
+available in flight-level global statistics. Remarkably, ConvTokMHSA (global
+attention, F1\,=\,0.208) performs \textit{worse} than flat XGBoost with Repr.~F
+(0.227), confirming that whole-flight context \textit{hurts} FC by injecting
+operational noise into the attention weights.
+
+\subsection{End-to-End Diagnosis}
+\label{subsec:results_e2e}
+
+\subsubsection{Performance Ladder}
+
+Table~\ref{tab:e2e_ladder} reports the full E2E performance ladder as a function
+of increasing oracle knowledge.
+
+\begin{table}[H]
+    \centering
+    \caption{E2E performance ladder (F1-macro, 20 classes: 0\,=\,healthy, 1--19\,=\,fault type).
+             The ``oracle'' prefix denotes perfect Stage~1 or Stage~2 routing.}
+    \label{tab:e2e_ladder}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Configuration} & \textbf{F1 macro} & \textbf{$\Delta$ vs.\ Cascade} \\
+        \midrule
+        Naive baseline (all HEALTHY)            & 0.034 & --- \\
+        Cascade LR$\to$XGB (Repr.~B)            & 0.112 & --- \\
+        Cascade XGB (Repr.~F)                   & 0.157 & $+$0.045 \\
+        Oracle routing $\to$ XGB (Repr.~B)      & 0.165 & $+$0.053 \\
+        \midrule
+        Var.~A: real AD + Oracle FC (K\,=\,4)  & 0.342 & $+$0.230 \\
+        Var.~B: Oracle AD + Oracle FC (K\,=\,4) \textbf{[ML ceiling]} & 0.457 & $+$0.345 \\
+        \midrule
+        LMSD (ConvTokMHSA + MMK Net) \cite{lmsd2025} & 0.623 & --- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Error Decomposition}
+
+For the Cascade LR$\to$XGB pipeline on the 11{,}446 out-of-fold flights,
+Table~\ref{tab:error_decomp} decomposes the total errors by type.
+
+\begin{table}[H]
+    \centering
+    \caption{E2E error decomposition for Cascade LR$\to$XGB (Repr.~B), out-of-fold.}
+    \label{tab:error_decomp}
+    \begin{tabular}{lrr}
+        \toprule
+        \textbf{Error type} & \textbf{Count} & \textbf{\% of all flights} \\
+        \midrule
+        Correct prediction                   & 5{,}538 & 48.4\% \\
+        Stage~1 false negative (fault~$\to$~healthy) & 1{,}675 & 14.6\% \\
+        Stage~1 false positive (healthy~$\to$~fault) & 1{,}833 & 16.0\% \\
+        Stage~2 wrong fault type             & 2{,}400 & 21.0\% \\
+        \midrule
+        \textbf{Total errors} & \textbf{5{,}908} & \textbf{51.6\%} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{Gap Analysis}
+
+Three quantities characterize the performance gap relative to the DL upper bound:
+
+\begin{align}
+    \Delta_{\text{routing}}  &= F1(\text{Var.~A}) - F1(\text{Cascade}) = 0.342 - 0.112 = +0.230 \label{eq:delta_routing} \\
+    \Delta_{\text{AD}}       &= F1(\text{Var.~B}) - F1(\text{Var.~A})  = 0.457 - 0.342 = +0.115 \label{eq:delta_ad} \\
+    \Delta_{\text{residual}} &= F1(\text{DL}) - F1(\text{ML ceiling})  = 0.623 - 0.457 = -0.166 \label{eq:delta_residual}
+\end{align}
+
+These results reveal three important findings:
+
+\begin{enumerate}
+    \item \textbf{FC is the dominant bottleneck.} The routing gain
+          $\Delta_{\text{routing}} = +0.230$ (Equation~\ref{eq:delta_routing})
+          dwarfs the AD gain $\Delta_{\text{AD}} = +0.115$. Improving fault
+          classification has twice the leverage of improving anomaly detection
+          for E2E performance.
+
+    \item \textbf{Stage~1 false negatives are the safety-critical failure mode.}
+          Of the 5{,}908 total errors, 1{,}675 (28.4\%) are Stage~1 false
+          negatives---faulty flights routed to the healthy label. These never
+          reach the fault classifier and are the most dangerous error type in
+          an operational context.
+
+    \item \textbf{40\% of errors are Stage~2 wrong-type errors.} Stage~2 errors
+          (2{,}400, 40.6\% of all errors) indicate correct anomaly detection
+          followed by incorrect fault attribution. This is not a safety failure
+          (the flight is still flagged), but prevents actionable maintenance
+          recommendations. The 0.166 residual gap between the ML ceiling and
+          the reported LMSD figure appears difficult to close with global
+          statistical features alone; temporal micro-pattern features (as in
+          MMK~Net) are the most likely route to narrowing it, though the exact
+          magnitude is uncertain given the withdrawal of the benchmark source.
+\end{enumerate}
+
+\subsection{Summary Comparison}
+\label{subsec:summary_compare}
+
+Table~\ref{tab:final_summary} consolidates the best results across all tasks
+and compares them against DL benchmarks.
+
+\begin{table}[H]
+    \centering
+    \caption{Final performance summary. $\uparrow$\,=\,higher is better;
+             $\downarrow$\,=\,lower is better.}
+    \label{tab:final_summary}
+    \begin{tabular}{llccc}
+        \toprule
+        \textbf{Task} & \textbf{Best model / method} & \textbf{F1}$\uparrow$ & \textbf{FNR}$\downarrow$ & \textbf{vs.\ DL best} \\
+        \midrule
+        AD  & LR Repr.~B              & 0.691 & 0.299 & $-$0.108 \\
+        AD  & Ensemble Repr.~F\textsubscript{++}  & 0.709 & 0.287 & $-$0.090 \\
+        AD  & ConvTokMHSA (DL)        & 0.799 & 0.163 & --- \\
+        \midrule
+        FC  & XGB Repr.~B (baseline)  & 0.121 & ---   & $-$0.502 \\
+        FC  & XGB Repr.~F (selected)  & 0.227 & ---   & $-$0.396 \\
+        FC  & Oracle K\,=\,4 (ceiling) & 0.420 & ---  & $-$0.203 \\
+        FC  & MMK Net (DL)            & 0.623 & ---   & --- \\
+        \midrule
+        E2E & Cascade LR$\to$XGB Repr.~B & 0.112 & --- & $-$0.511 \\
+        E2E & Cascade XGB Repr.~F    & 0.157 & ---   & $-$0.466 \\
+        E2E & Var.~B ML ceiling       & 0.457 & ---   & $-$0.166 \\
+        E2E & LMSD (DL)              & 0.623 & ---   & --- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The results support the hypothesis stated in Section~\ref{sec:intro}: classical
+models with global statistical features are \textit{competitive but not
+equivalent} to DL for AD ($-$9\,pp gap), and face a substantially larger gap for
+FC ($-$20\,pp even at the Oracle ceiling, measured against indicative DL figures).
+The most promising path to closing the remaining FC gap appears to be temporal
+deep learning models---specifically, locally restricted architectures like
+MMK~Net---rather than further feature engineering on global statistics. We stress
+that the magnitude of this gap rests on benchmark numbers from a withdrawn
+preprint and should be re-validated once corrected results become available.

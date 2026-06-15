@@ -1,0 +1,38 @@
+Model,Repr,F1-macro,±std,Accuracy,Type
+MMK Net (DL),Repr A,0.623,—,—,DL paper
+Oracle K=4 ceiling,Repr F++,0.459,0.027,—,oracle (upper bound)
+ConvTokMHSA (DL),Repr A,0.208,—,—,DL paper
+XGBoost,Repr F++,0.207,0.024,0.255,classical tuned
+XGBoost,Repr B,0.176,0.016,0.224,classical tuned
+XGB K=4 Cascade,Repr F++,0.172,0.023,—,hierarchical
+XGBoost,Repr F++,0.169,0.026,0.392,classical default
+XGBoost,Repr B,0.116,0.007,0.372,classical default
+LR,Repr F++,0.098,0.007,0.098,classical default
+LR,Repr F++,0.095,0.005,0.096,classical tuned
+LR,Repr Bseg5,0.088,0.01,0.133,classical default
+XGBoost,Repr Bseg3,0.087,0.009,0.357,classical default
+LR,Repr B,0.086,0.01,0.087,classical default
+LR,Repr Bseg3,0.086,0.015,0.113,classical default
+kNN,Repr F++,0.079,0.017,0.357,classical default
+Ensemble,Repr F++,0.078,0.006,0.407,classical default
+LR,Repr Bseg10,0.076,0.006,0.169,classical default
+XGBoost,Repr Bseg5,0.068,0.003,0.365,classical default
+kNN,Repr B,0.065,0.01,0.342,classical default
+Random Forest,Repr F++,0.062,0.003,0.383,classical default
+Ensemble,Repr B,0.059,0.004,0.392,classical default
+XGBoost,Repr Bseg10,0.057,0.008,0.36,classical default
+kNN,Repr Bseg3,0.056,0.007,0.339,classical default
+kNN,Repr Bseg5,0.055,0.012,0.341,classical default
+kNN,Repr Bseg10,0.053,0.006,0.332,classical default
+Random Forest,Repr Bseg10,0.048,0.009,0.368,classical default
+Ensemble,Repr Bseg3,0.048,0.004,0.387,classical default
+Ensemble,Repr Bseg5,0.047,0.005,0.384,classical default
+Random Forest,Repr B,0.047,0.007,0.378,classical default
+Random Forest,Repr Bseg5,0.046,0.009,0.372,classical default
+Random Forest,Repr Bseg3,0.045,0.01,0.374,classical default
+Ensemble,Repr Bseg10,0.039,0.002,0.37,classical default
+Linear SVM,Repr Bseg3,0.031,0.003,0.375,classical default
+Linear SVM,Repr F++,0.03,0.001,0.374,classical default
+Linear SVM,Repr B,0.029,0.0,0.373,classical default
+Linear SVM,Repr Bseg10,0.029,0.0,0.375,classical default
+Linear SVM,Repr Bseg5,0.029,0.0,0.374,classical default

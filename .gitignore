@@ -1,0 +1,34 @@
+# ─── Heavy data (NOT uploaded — download separately, see README) ─────────────
+data/X_raw_L2048.npy
+data/flight_data.pkl
+datasets/*.npz
+datasets/*.csv
+
+# ─── Jupyter / Python ────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# ─── LaTeX build artifacts ───────────────────────────────────────────────────
+report/build/
+paper/build/
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# ─── OS / editor / backups ───────────────────────────────────────────────────
+.DS_Store
+*.bak
+.idea/
+.vscode/

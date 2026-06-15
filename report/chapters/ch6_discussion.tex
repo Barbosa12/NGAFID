@@ -1,0 +1,137 @@
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Discussion}
+\label{sec:discussion}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Interpretation and Implications}
+\label{subsec:implications}
+
+The results carry a clear operational message: the two halves of the diagnosis
+problem are \emph{not} equally hard, and they should not be treated as a single
+modeling task. For \textbf{Anomaly Detection}, a plain Logistic Regression on
+184 global statistics reaches F1\,=\,0.691 with full interpretability and
+millisecond inference. This is already a deployable safety screen: it can flag
+roughly seven of every ten anomalous flights for human review using nothing more
+than per-sensor means, spreads, and trends. The single most discriminative
+channel---oil pressure (\texttt{E1 OilP})---matches the physical intuition that
+lubrication state is the primary early indicator of engine health, which gives
+maintenance engineers a defensible reason to trust the flag.
+
+For \textbf{Fault Classification}, the picture is different and arguably more
+important to state honestly. Even with feature selection and an Oracle
+hierarchical grouping, the classical ceiling (F1\,=\,0.420) leaves the majority
+of the 19 fault types poorly recognized, and several minority classes are never
+recovered at all (Table~\ref{tab:perclass}). The end-to-end consequence is
+concrete: of the flights our cascade gets wrong, \emph{40.6\%} are correctly
+flagged as anomalous but assigned the \emph{wrong} fault type
+(Table~\ref{tab:error_decomp}). Such an error does not endanger the aircraft---it
+is still grounded for inspection---but it misdirects the maintenance action and
+erodes trust in the system. The practical implication is that a global-statistics
+classifier is fit for \emph{triage} (sick vs.\ healthy) but not yet for
+\emph{prescription} (which part to fix).
+
+Why does this matter beyond a class assignment? General aviation still runs on
+calendar-based maintenance. A reliable AD screen alone---cheap, interpretable,
+and trainable on a laptop---is enough to move part of the fleet toward
+\emph{condition-based} inspection, catching emerging faults between scheduled
+windows. The fault-typing problem, by contrast, is where temporal deep learning
+earns its cost.
+
+\subsection{Relation to Prior Work}
+\label{subsec:related}
+
+Our study sits downstream of three lines of NGAFID research. The dataset itself
+was introduced by Yang and Desell \cite{ngafid2021} as a large-scale, real
+(non-simulated) maintenance benchmark; we adopt their per-second 23-sensor
+representation and physically isolated cross-validation protocol. Yang,
+LaBella, and Desell \cite{convtok2023} then showed that convolutional
+transformers operating on the raw sequence outperform shallow baselines for
+predictive maintenance---consistent with our finding that the residual FC gap is
+temporal in nature. Finally, the LMSD framework \cite{lmsd2025} proposed the very
+two-stage decomposition (global screening for AD, micro-scale kernels for FC)
+that we reproduce here with classical models.
+
+An important caveat governs this comparison. The deep learning numbers we cite
+(ConvTokMHSA F1\,=\,0.799 on AD; MMK~Net F1\,=\,0.623 on FC) come from the LMSD
+preprint, which was \emph{withdrawn by its own authors} over acknowledged
+``methodological flaws \ldots\ in the experimental validation and
+metric-computation procedures.'' We deliberately retained the comparison because
+the \emph{qualitative} story---global context helps AD, local micro-patterns help
+FC---is corroborated independently by \cite{convtok2023} and by our own ablations
+(global-attention ConvTokMHSA scoring \emph{below} flat XGBoost on FC). But the
+precise gap magnitudes (9\,pp on AD, 20\,pp on FC) should be read as provisional.
+If anything, the withdrawal strengthens the case for our classical baselines:
+when a state-of-the-art result is retracted, a transparent, reproducible,
+laptop-trainable system that reports honest cross-validated variance becomes more
+valuable, not less.
+
+\subsection{Survey of Tools Investigated}
+\label{subsec:tools}
+
+This project was deliberately built on the open-source Python scientific stack
+emphasized in the course. Table~\ref{tab:tools} surveys the principal tools, the
+role each played, and the practical strengths and limitations we observed.
+
+\begin{table}[H]
+    \centering
+    \caption{Survey of tools investigated, with observed strengths and limitations.}
+    \label{tab:tools}
+    \begin{tabular}{p{2.4cm} p{4.1cm} p{6.0cm}}
+        \toprule
+        \textbf{Tool} & \textbf{Role in this project} & \textbf{Observed strength / limitation} \\
+        \midrule
+        NumPy & Vectorized statistics for the 2{,}048$\times$23 flight matrices; closed-form OLS slope. & {\itshape +} $\sim5\times$ faster slope than \texttt{polyfit}. {\itshape --} manual NaN handling. \\
+        \addlinespace
+        pandas & Loading, joining maintenance labels, fold bookkeeping. & {\itshape +} expressive munging. {\itshape --} memory-heavy at 11{,}446$\times$184. \\
+        \addlinespace
+        scikit-learn \cite{sklearn2011} & LR, LinearSVM, RF, KNN; pipelines, scaling, CV, metrics. & {\itshape +} uniform API, fold-safe preprocessing. {\itshape --} no native time-series shape features. \\
+        \addlinespace
+        XGBoost \cite{xgboost2016} & Best flat classical model on FC; gain-based feature selection (224$\to$60). & {\itshape +} handles nonlinear interactions and imbalance. {\itshape --} sensitive to long-tail minority classes. \\
+        \addlinespace
+        MiniRocket \cite{minirocket2021} & Repr.~G: random convolutional kernels for temporal shape. & {\itshape +} fast, near-deterministic. {\itshape --} $\sim$10k features, low interpretability, modest FC gain. \\
+        \addlinespace
+        tsfresh \cite{tsfresh2018} & Repr.~H: autocorrelation, FFT, entropy, nonlinearity descriptors. & {\itshape +} rich feature library. {\itshape --} expensive to compute, many redundant features. \\
+        \addlinespace
+        Matplotlib / Seaborn & EDA, class-distribution and PCA-variance figures. & {\itshape +} publication-quality output. {\itshape --} verbose for faceted plots. \\
+        \addlinespace
+        Keras / TensorFlow & Surveyed as the route to the temporal DL models that define the upper bound. & {\itshape +} the natural tool to close the FC gap. {\itshape --} out of scope here; left to future work. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The central lesson from this tool survey is one of \emph{matching the
+representation to the task}. The scikit-learn / XGBoost path is outstanding for
+AD: fast, interpretable, and statistically honest under cross-validation. The
+dedicated time-series transforms (MiniRocket, tsfresh) promised to recover the
+temporal shape that FC needs, but in practice they inflated the feature space by
+one to two orders of magnitude while yielding only marginal FC improvement---a
+strong empirical signal that fault signatures are \emph{local} events that random
+or generic features dilute. That negative result is what points unambiguously
+toward locally restricted deep learning (Keras/TensorFlow), the one family of
+tools we surveyed but did not train, as the principled next step.
+
+\subsection{Limitations}
+\label{subsec:limitations}
+
+Three limitations bound our conclusions. First, all results use the 2-day
+benchmark subset (11{,}446 flights, 19 classes); the full 36-class NGAFID is more
+imbalanced and would likely lower every score. Second, the Oracle K\,=\,4 result
+is an \emph{upper bound}: it assumes the coarse fault group is known at test time,
+so the F1\,=\,0.420 figure is a ceiling, not a deployable number. Third, and most
+importantly, our deep learning reference points inherit the reliability problem of
+the withdrawn source preprint \cite{lmsd2025}; the comparison is directionally
+sound but not numerically definitive.
+
+\subsection{Future Work}
+\label{subsec:future}
+
+The error decomposition makes the priority unambiguous: \textbf{fault
+classification is the bottleneck}, with twice the end-to-end leverage of anomaly
+detection. The clearest next steps are (i) training a locally restricted temporal
+model (MMK-style micro-kernel CNN in Keras/TensorFlow) on the raw sequences to
+test whether the FC gap is genuinely temporal; (ii) re-running the full benchmark
+once corrected LMSD results are published, to re-anchor the comparison on
+trustworthy numbers; and (iii) addressing the 38:1 class imbalance directly
+through resampling or cost-sensitive losses, since the long tail---not model
+capacity alone---drives the minority-class failures observed in
+Table~\ref{tab:perclass}.

@@ -1,0 +1,99 @@
+% config/config.tex
+
+% --- encoding ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+% --- fonts ---
+\usepackage{newpxtext}
+\usepackage{newpxmath}
+
+% --- page layout ---
+\usepackage[
+  letterpaper,
+  margin=1in,
+  headheight=14.5pt,
+  includeheadfoot
+]{geometry}
+
+% --- spacing and typography ---
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{microtype}
+\setlength{\parindent}{0.5in}
+\setlength{\parskip}{0pt}
+\usepackage{indentfirst}
+
+% --- math and symbols ---
+\usepackage{amsmath}
+\let\openbox\relax
+\usepackage{amsthm}
+
+% --- graphics / tables ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{float}
+\captionsetup{font=small, labelfont=bf}
+
+% --- color / links ---
+\usepackage{xcolor}
+\definecolor{npsblue}{RGB}{0,51,102}
+\usepackage[
+  colorlinks=true,
+  linkcolor=npsblue,
+  citecolor=npsblue,
+  urlcolor=npsblue
+]{hyperref}
+
+% --- headers / footers ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+%\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[L]{\CourseCode\ -- \ReportSubtitle}
+\fancyhead[R]{\StudentName}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Ensure article sections populate marks nicely
+\makeatletter
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+\makeatother
+
+% --- section formatting ---
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{0.5em}{}
+
+% --- theorem environments ---
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+% --- bibliography ---
+\usepackage[numbers]{natbib}
+
+% --- code listings ---
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\scriptsize,
+  stepnumber=1,
+  numbersep=8pt,
+  showstringspaces=false,
+  tabsize=4
+}

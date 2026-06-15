@@ -1,0 +1,218 @@
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Dataset Description}
+\label{sec:dataset}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{NGAFID Overview}
+
+The National General Aviation Flight Information Database (NGAFID) is a
+real-world benchmark for aircraft health diagnosis research. It was collected
+from a Cessna-172 fleet operated by an active flight school and correlates
+23-dimensional sensor measurements with verified unscheduled maintenance records.
+Table~\ref{tab:ngafid_overview} summarizes the key characteristics of the
+dataset.
+
+\begin{table}[H]
+    \centering
+    \caption{NGAFID dataset overview.}
+    \label{tab:ngafid_overview}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Property} & \textbf{Value} \\
+        \midrule
+        Aircraft type         & Cessna-172 \\
+        Operator              & Real flight school (anonymized) \\
+        Total flights         & $>$28{,}000 (31{,}000 flight hours) \\
+        Sensor channels       & 23 @ 1\,Hz \\
+        Maintenance categories & 36 \\
+        Unscheduled events    & $>$2{,}000 \\
+        Preprocessing         & Forward-fill for NaN; cubic spline $\to$ 2{,}048 pts \\
+        \midrule
+        \multicolumn{2}{l}{\textit{Benchmark subset (2-day) — used in this work}} \\
+        Total flights         & 11{,}446 \\
+        Healthy flights       & 5{,}845 (51.1\%) \\
+        Anomalous flights     & 5{,}601 (48.9\%) \\
+        Fault classes (FC)    & 19 \\
+        Cross-validation      & 5-fold stratified, physically isolated \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+NGAFID provides two dataset configurations: the \textit{benchmark subset}
+(19 classes, 11{,}446 flights) used for controlled evaluation, and the
+\textit{overall dataset} (36 classes, 28{,}935 flights) for open-environment
+assessment. This study uses the benchmark subset exclusively.
+
+\subsection{Sensor Space}
+
+The 23 sensor channels cover five critical aircraft subsystems.
+Table~\ref{tab:sensors} lists all channels grouped by subsystem.
+
+\begin{table}[H]
+    \centering
+    \caption{23-dimensional sensor space organized by subsystem.}
+    \label{tab:sensors}
+    \begin{tabular}{llc}
+        \toprule
+        \textbf{Subsystem} & \textbf{Channels} & \textbf{Count} \\
+        \midrule
+        Electrical   & \texttt{volt1}, \texttt{volt2}, \texttt{amp1}, \texttt{amp2} & 4 \\
+        Fuel         & \texttt{FQtyL}, \texttt{FQtyR} & 2 \\
+        Engine       & \texttt{E1 FFlow}, \texttt{E1 OilT}, \texttt{E1 OilP}, \texttt{E1 RPM} & 4 \\
+        Cylinders (CHT) & \texttt{E1 CHT1}, \texttt{E1 CHT2}, \texttt{E1 CHT3}, \texttt{E1 CHT4} & 4 \\
+        Cylinders (EGT) & \texttt{E1 EGT1}, \texttt{E1 EGT2}, \texttt{E1 EGT3}, \texttt{E1 EGT4} & 4 \\
+        Flight state & \texttt{IAS}, \texttt{VSpd}, \texttt{AltMSL}, \texttt{NormAc} & 4 \\
+        Environment  & \texttt{OAT} & 1 \\
+        \midrule
+        \textbf{Total} & & \textbf{23} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+All 23 channels are sampled at 1\,Hz. After preprocessing, each flight is
+represented as a matrix $\mathbf{X} \in \mathbb{R}^{2048 \times 23}$, where
+rows correspond to time steps and columns to sensor channels.
+
+\subsection{Flight Duration Statistics}
+
+Raw flight lengths vary considerably across the dataset, reflecting the diverse
+operational modes of a flight school (student training, check rides, cross-country
+flights). After interpolation to 2{,}048 fixed time steps, the original durations
+are preserved as metadata:
+
+\begin{itemize}
+    \item \textbf{Minimum:} 605\,s ($\approx$\,10\,min)
+    \item \textbf{Median:} 5{,}282\,s ($\approx$\,88\,min)
+    \item \textbf{Maximum:} 20{,}679\,s ($\approx$\,345\,min)
+\end{itemize}
+
+\subsection{Class Distribution and Fault Taxonomy}
+
+The 19 fault categories in the benchmark subset represent distinct maintenance
+findings, each linked to a specific structural or functional component of the
+aircraft. Table~\ref{tab:class_dist} lists all classes in descending order of
+flight count.
+
+\begin{table}[H]
+    \centering
+    \caption{Fault class distribution in the benchmark subset (5{,}601 anomalous flights).}
+    \label{tab:class_dist}
+    \begin{tabular}{clrr}
+        \toprule
+        \textbf{ID} & \textbf{Fault Category} & \textbf{Flights} & \textbf{\%} \\
+        \midrule
+        14 & Intake gasket leak / damage         & 2{,}097 & 37.4 \\
+        18 & Rocker cover leak / loose / damage  & 1{,}024 & 18.3 \\
+         2 & Baffle crack / damage / loose / miss &   304  &  5.4 \\
+         4 & Intake tube / bolt / seal / boot loose or damage & 269 & 4.8 \\
+         1 & Baffle plug need repair / replace    &   254  &  4.5 \\
+         3 & Baffle screw missing / loose         &   211  &  3.8 \\
+         6 & Baffle seal loose / damage           &   197  &  3.5 \\
+         8 & Engine failure / fire / time out     &   161  &  2.9 \\
+         5 & Baffle tie / tie rod loose or damage &   144  &  2.6 \\
+        10 & Cylinder compression issue           &   143  &  2.6 \\
+        11 & Engine run rough                     &   141  &  2.5 \\
+         7 & Cylinder crack / fail / need repair  &   108  &  1.9 \\
+        13 & Engine / propeller overspeed or damage &   94  &  1.7 \\
+         9 & Engine idle / RPM issue              &    93  &  1.7 \\
+        15 & Engine need repair / reinstall / clean &   80  &  1.4 \\
+        12 & Engine seal / tube / bolt loose or damage &  76 & 1.4 \\
+        16 & Oil cooler need maintenance          &    75  &  1.3 \\
+        17 & Pilot / in-flight noticed issue      &    75  &  1.3 \\
+         0 & Baffle rivet loose / missing / damage &   55  &  1.0 \\
+        \midrule
+        \textbf{---} & \textbf{Total anomalous} & \textbf{5{,}601} & \textbf{100.0} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The imbalance ratio between the largest class (intake gasket, $n$\,=\,2{,}097)
+and the smallest class (baffle rivet, $n$\,=\,55) is \textbf{38.1:1}, creating
+an extreme long-tailed distribution that poses a significant challenge for
+minority class recognition.
+
+\subsection{Key Data Challenges}
+\label{subsec:challenges}
+
+NGAFID exhibits three fundamental characteristics that distinguish it from
+synthetic benchmarks and directly constrain the achievable performance of any
+classification approach \cite{convtok2023, lmsd2025}.
+
+\subsubsection{Target Component Sparsity}
+
+When the feature matrix $\mathbf{X}$ is projected into principal component space,
+fault-discriminative information concentrates in components 12--18, which
+together account for \textbf{less than 0.1\% of total variance}. The dominant
+components (PCs 1--11) capture operational variability common to both healthy and
+anomalous flights---altitude profile, throttle inputs, ambient temperature
+effects---and actively \textit{mask} the fault signatures that classifiers need
+to detect.
+
+Empirically, the Repr.~B feature matrix (184 features) requires \textbf{51
+principal components} to explain 95\% of its variance. This high intrinsic
+dimensionality relative to the number of fault-informative components explains
+why deep models with local receptive fields outperform global statistical methods
+on FC.
+
+\subsubsection{Multi-Stage Coupling}
+
+Each flight traverses multiple operationally heterogeneous phases: ground taxi,
+takeoff and climb, cruise, descent and approach, and ground rollout. These phases
+have statistically distinct dynamics for virtually every sensor channel---RPM,
+fuel flow, CHT, and altitude all follow phase-specific profiles. This
+heterogeneity creates strong temporal dependencies that prohibit phase-wise
+isolation; a feature vector that captures only one flight phase misses the
+fault's temporal context. Conversely, a global feature vector aggregates across
+all phases, diluting phase-specific anomalies.
+
+\subsubsection{Dual Imbalance}
+
+NGAFID exhibits imbalance at two levels simultaneously:
+\begin{itemize}
+    \item \textbf{Quantitative (AD level):} The benchmark subset is nearly
+          balanced between healthy (51.1\%) and anomalous (48.9\%) flights.
+          However, the \textit{overall} NGAFID dataset has a substantial
+          majority of healthy flights, reflecting real fleet operations where
+          chronic wear dominates over acute failures.
+    \item \textbf{Structural (FC level):} Among the 19 fault classes, the
+          distribution is severely long-tailed with an imbalance ratio of 38.1:1.
+          The two head classes alone (intake gasket + rocker cover) account for
+          55.7\% of all anomalous flights. This reflects \textit{objective fleet
+          reality}---some faults are inherently more prevalent---rather than
+          sampling bias.
+\end{itemize}
+
+\subsection{Cross-Validation Protocol}
+\label{subsec:cv}
+
+All experiments use a \textbf{5-fold stratified cross-validation} scheme that
+maintains class proportions within each fold while enforcing strict physical
+isolation: no two flights from the same physical aircraft appear in both the
+training and test partitions of the same fold. This prevents optimistic
+performance estimates that would arise from data leakage between temporally
+correlated flights.
+
+Fold composition for the AD task is shown in Table~\ref{tab:cv_folds}.
+
+\begin{table}[H]
+    \centering
+    \caption{5-fold CV composition for the AD task.}
+    \label{tab:cv_folds}
+    \begin{tabular}{ccc}
+        \toprule
+        \textbf{Fold} & \textbf{Healthy} & \textbf{Anomalous} \\
+        \midrule
+        0 & 1{,}167 & 1{,}123 \\
+        1 & 1{,}123 & 1{,}166 \\
+        2 & 1{,}162 & 1{,}127 \\
+        3 & 1{,}192 & 1{,}097 \\
+        4 & 1{,}201 & 1{,}088 \\
+        \midrule
+        \textbf{Total} & \textbf{5{,}845} & \textbf{5{,}601} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Feature normalization (z-score standardization) is applied within each fold,
+with mean and standard deviation estimated exclusively from the training split
+and applied to the test split to prevent test-set contamination.

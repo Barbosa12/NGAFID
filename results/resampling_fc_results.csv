@@ -1,0 +1,16 @@
+Task,Model,Strategy,F1-macro,±std,Acc
+FC,RF,SMOTE,0.315,0.03,0.393
+FC,RF,SMOTE+Tomek,0.315,0.025,0.403
+FC,XGB,RUS moderate,0.195,0.019,0.275
+FC,XGB,class_weight,0.15,0.023,0.408
+FC,XGB,SMOTE+Tomek,0.148,0.016,0.401
+FC,XGB,SMOTE,0.143,0.017,0.4
+FC,RF,RUS moderate,0.142,0.03,0.282
+FC,RF,RUS aggressive,0.115,0.01,0.117
+FC,XGB,RUS aggressive,0.109,0.012,0.11
+FC,LR,RUS moderate,0.108,0.007,0.157
+FC,LR,class_weight,0.098,0.007,0.098
+FC,LR,SMOTE+Tomek,0.092,0.011,0.096
+FC,LR,SMOTE,0.091,0.011,0.096
+FC,LR,RUS aggressive,0.084,0.005,0.094
+FC,RF,class_weight,0.062,0.003,0.383

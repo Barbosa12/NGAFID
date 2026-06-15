@@ -1,0 +1,113 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% CS3315 Final Project Report — NGAFID
+% Aviation Engine Health Monitoring via Machine Learning
+% Iván Barbosa Mejía · NPS MSCS Q3 · 2026
+% Compile: make  (pdflatex → bibtex → pdflatex × 2)
+% ─────────────────────────────────────────────────────────────────────────────
+\documentclass[10pt]{article}
+
+\providecommand{\StudentName}{Iván Barbosa Mejía}
+\providecommand{\CourseCode}{CS3315}
+\providecommand{\CourseName}{Introduction to Machine Learning \& Big Data}
+\providecommand{\ProfessorName}{Prof.  Marko Orescanin}
+\providecommand{\DepartmentName}{Department of Computer Science}
+\providecommand{\QuarterInfo}{MSCS Q3 · 2026}
+\providecommand{\ReportTitle}{Aviation Engine Health Monitoring\\via Machine Learning}
+\providecommand{\ReportSubtitle}{NGAFID: Anomaly Detection \& Fault Classification on a Real Cessna-172 Fleet}
+\providecommand{\OrganizationName}{Naval Postgraduate School}
+\providecommand{\LocationName}{Monterey, California}
+\providecommand{\SubmissionDate}{\today}
+
+\input{config/config.tex}
+
+% ─── extra packages for this report ──────────────────────────────────────────
+\usepackage{multirow}
+\usepackage{amsmath}
+% newpxmath (loaded in config) already defines \Bbbk; release it so amssymb
+% can load without an "already defined" clash.
+\let\Bbbk\relax
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% ─── title page macro (reused from study notes template) ─────────────────────
+\newcommand{\MakeNPSTitlePage}{%
+\begin{titlepage}
+    \thispagestyle{empty}
+    \begin{center}
+        \vspace*{0.8cm}
+        {\Large\textbf{\OrganizationName}\\[0.15cm]}
+        {\large \LocationName\\[1.2cm]}
+        \includegraphics[width=0.23\textwidth]{images/logo_NPS.png}\\[1.0cm]
+        {\Large \DepartmentName\\[1.2cm]}
+        {\huge\bfseries \ReportTitle\\[0.35cm]}
+        {\Large \ReportSubtitle\\[1.1cm]}
+        \begin{tabular}{rl}
+            \textbf{Course:}     & \CourseCode\ --- \CourseName \\
+            \textbf{Instructor:} & \ProfessorName \\
+            \textbf{Student:}    & \StudentName \\
+            \textbf{Quarter:}    & \QuarterInfo \\
+            \textbf{Date:}       & \SubmissionDate \\
+            \textbf{Code:}       & \url{https://github.com/Barbosa12/NGAFID} \\
+        \end{tabular}
+        \vfill
+    \end{center}
+\end{titlepage}
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+\pagenumbering{roman}
+\MakeNPSTitlePage
+
+\begin{abstract}
+This report presents a machine learning study on aviation engine health monitoring
+using the National General Aviation Flight Information Database (NGAFID), a
+real-world dataset of 11{,}446 flights from a Cessna-172 flight school fleet
+labeled with 19 fault categories and correlated with over 2{,}000 unscheduled
+maintenance events. We formulate the problem as a two-stage pipeline: binary
+Anomaly Detection (AD) followed by 19-class Fault Classification (FC). Multiple
+classical models (Logistic Regression, SVM, XGBoost, Random Forest) are trained
+on flight-level statistical feature representations and benchmarked against
+deep learning models reported in the literature, including ConvTokMHSA, MMK~Net,
+and the LMSD framework \cite{lmsd2025}. Our best classical system achieves
+F1~=~0.691 on AD (Logistic Regression, 184 features) and F1~=~0.420 on FC
+(Oracle K\,=\,4 hierarchical grouping), versus the published DL figures of 0.799
+and 0.623 respectively---figures we treat as indicative only, since the source
+preprint was subsequently withdrawn by its authors over metric-computation flaws.
+The analysis shows that global statistical features are competitive for binary
+detection, but a sizeable gap persists on FC because fault signatures concentrate
+in the 12th--18th principal components, contributing less than 0.1\% of total
+variance and remaining largely invisible to global statistics. The end-to-end
+pipeline achieves F1~=~0.184, limited primarily by Stage~2 fault classification
+errors (40.6\% of all errors).
+\end{abstract}
+
+\tableofcontents
+\clearpage
+
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+\input{chapters/ch1_intro.tex}
+\newpage
+\input{chapters/ch2_dataset.tex}
+\newpage
+\input{chapters/ch3_features.tex}
+\newpage
+\input{chapters/ch4_methodology.tex}
+\newpage
+\input{chapters/ch5_results.tex}
+\newpage
+\input{chapters/ch6_discussion.tex}
+\newpage
+\input{chapters/ch7_summary.tex}
+
+\clearpage
+\bibliographystyle{unsrtnat}
+\bibliography{bib/references}
+
+\end{document}

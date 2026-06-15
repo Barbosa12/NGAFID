@@ -1,0 +1,4 @@
+Task,Classical,DL (ours),DL model,Paper DL,DL−Classical,DL−Paper
+AD,0.703,0.74,CNN+Attn,0.799,0.037,-0.059
+FC,0.315,0.234,1D-CNN,0.623,-0.081,-0.389
+E2E,0.235,0.201,CNN+Attn→1D-CNN,0.623,-0.034,-0.422

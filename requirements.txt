@@ -1,0 +1,12 @@
+# NGAFID — Aviation Engine Health Monitoring
+# Tested with Python 3.12. Pinned to the versions used to produce the results.
+numpy==2.2.6
+pandas==2.3.3
+scipy==1.16.3
+scikit-learn==1.7.2
+xgboost==3.2.0
+matplotlib==3.10.7
+seaborn==0.13.2
+jupyterlab==4.2.5
+notebook==7.2.2
+ipykernel==6.28.0
