@@ -7,7 +7,7 @@ A central challenge in applying classical ML to variable-length time series is
 the extraction of a fixed-size feature vector that captures diagnostically
 relevant information while discarding operational noise. This section describes
 the hierarchy of representations developed for NGAFID, from a simple global
-statistics baseline to temporal shape descriptors.
+statistics baseline to segmented and cross-physical descriptors.
 
 \subsection{Representation B: Global Per-Sensor Statistics}
 \label{subsec:reprB}
@@ -121,40 +121,6 @@ discriminative ones. The top 5 features by XGBoost information gain are:
 \texttt{E1 FFlow\_min}, \texttt{OAT\_min}, \texttt{amp2\_mean},
 \texttt{amp2\_min}, and \texttt{volt2\_min}.
 
-\subsection{Representations G and H: Temporal Shape}
-\label{subsec:reprGH}
-
-Global statistics and inter-cylinder features cannot capture the
-\textit{shape} of sensor trajectories: whether a temperature curve rises
-monotonically or fluctuates, whether RPM has a characteristic oscillation
-frequency, or whether fuel flow drops abruptly at a specific flight phase. To
-address this, two time-series transformation approaches are explored.
-
-\subsubsection{Representation G: MiniRocket}
-
-MiniRocket \cite{minirocket2021} transforms each univariate time series into a
-high-dimensional feature vector using a large bank of random convolutional kernels
-(default: 10{,}000) with dilated receptive fields. For each kernel applied to
-each of the 23 sensor channels:
-\begin{equation}
-    f_k = \text{PPV}\bigl(\mathbf{x}_j * \mathbf{w}_k\bigr) =
-        \frac{1}{T}\sum_{t} \mathbf{1}\bigl[(\mathbf{x}_j * \mathbf{w}_k)_t > 0\bigr]
-\end{equation}
-where PPV (Proportion of Positive Values) is a simple pooling that is both
-fast to compute and highly discriminative. The resulting Repr.~G vector has
-approximately 10{,}000 features per flight.
-
-Repr.~G\textsubscript{++} further concatenates the MiniRocket features with
-Repr.~F\textsubscript{++}, yielding $\sim$10{,}224 features.
-
-\subsubsection{Representation H: tsfresh}
-
-tsfresh \cite{tsfresh2018} computes a comprehensive library of time-series
-features per channel, including autocorrelation coefficients at multiple lags,
-FFT spectral peaks, entropy measures, nonlinearity statistics, and
-linear/nonlinear trend indicators. The feature count varies depending on the
-selected feature set but is on the order of hundreds to thousands per channel.
-
 Table~\ref{tab:repr_summary} summarizes all representations and their key
 properties.
 
@@ -170,9 +136,6 @@ properties.
         B\textsubscript{seg} & B applied to $N$ segments & 552--1840 & Temporal evolution of global stats \\
         F\textsubscript{++} & B + cross-cylinder features & 224   & Inter-cylinder asymmetry and ratios \\
         F               & F\textsubscript{++} + XGB gain selection & 60 & Most discriminative 60 features \\
-        G               & MiniRocket kernels           & $\sim$10k & Temporal shape via random convolutions \\
-        H               & tsfresh                      & $\sim$var & Autocorrelation, FFT, entropy, nonlinearity \\
-        G\textsubscript{++} & G + F\textsubscript{++}  & $\sim$10k+ & Temporal shape + cross-physical \\
         \bottomrule
     \end{tabular}
 \end{table}

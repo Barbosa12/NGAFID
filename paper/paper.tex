@@ -144,9 +144,7 @@ channel, giving $23\times 8 = 184$ features. Representation~$F_{++}$ adds
 \emph{cross-physical} inter-cylinder features (CHT/EGT spread, coefficient of
 variation, pairwise ratios), reaching 224 features; XGBoost gain-based selection
 then reduces this to 60 (Repr.~F). Segmented variants ($B_{\text{seg}}$) apply
-Repr.~B to $N$ equal flight segments to inject coarse temporal ordering, and
-temporal-shape transforms (MiniRocket~G~\cite{minirocket2021}, tsfresh~H
-\cite{tsfresh2018}) were also explored.
+Repr.~B to $N$ equal flight segments to inject coarse temporal ordering.
 
 \begin{table}[t]
     \centering
@@ -161,8 +159,6 @@ temporal-shape transforms (MiniRocket~G~\cite{minirocket2021}, tsfresh~H
         $B_{\text{seg}}$ & Repr.~B over $N$ flight segments      & 552--1840 \\
         $F_{++}$        & B $+$ cross-cylinder asymmetry/ratios  & 224 \\
         F               & $F_{++}$ $+$ XGB gain selection        & 60 \\
-        G               & MiniRocket random kernels             & $\sim$10k \\
-        H               & tsfresh (ACF, FFT, entropy)           & var \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -417,12 +413,12 @@ classical baseline with honest cross-validated variance more valuable, not less.
 NumPy/pandas for munging, scikit-learn~\cite{sklearn2011} for the linear and
 distance models, pipelines, and fold-safe preprocessing; XGBoost~\cite{xgboost2016}
 as the best flat classical model and gain-based feature selector; and
-MiniRocket~\cite{minirocket2021} and tsfresh~\cite{tsfresh2018} for temporal-shape
-features. The dedicated time-series transforms inflated the feature space by one
-to two orders of magnitude for only marginal FC gain---a strong empirical signal
-that fault signatures are local events that generic features dilute, pointing
-toward locally restricted deep learning (Keras/TensorFlow) as the principled next
-tool, which we surveyed but left to future work.
+Matplotlib/Seaborn for EDA and figures. For FC, even the most informative tabular
+representation ($F_{++}$) plateaus below the deep-learning reference, because
+global and segmented statistics discard the local temporal signatures that
+distinguish fault types---pointing toward locally restricted deep learning
+(Keras/TensorFlow) as the principled next tool, which we surveyed but left to
+future work.
 
 \textbf{Limitations and future work.} Results use the 19-class benchmark subset;
 the full 36-class NGAFID is harder. The Oracle $K{=}4$ figure is an upper bound,

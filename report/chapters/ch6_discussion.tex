@@ -89,10 +89,6 @@ role each played, and the practical strengths and limitations we observed.
         \addlinespace
         XGBoost \cite{xgboost2016} & Best flat classical model on FC; gain-based feature selection (224$\to$60). & {\itshape +} handles nonlinear interactions and imbalance. {\itshape --} sensitive to long-tail minority classes. \\
         \addlinespace
-        MiniRocket \cite{minirocket2021} & Repr.~G: random convolutional kernels for temporal shape. & {\itshape +} fast, near-deterministic. {\itshape --} $\sim$10k features, low interpretability, modest FC gain. \\
-        \addlinespace
-        tsfresh \cite{tsfresh2018} & Repr.~H: autocorrelation, FFT, entropy, nonlinearity descriptors. & {\itshape +} rich feature library. {\itshape --} expensive to compute, many redundant features. \\
-        \addlinespace
         Matplotlib / Seaborn & EDA, class-distribution and PCA-variance figures. & {\itshape +} publication-quality output. {\itshape --} verbose for faceted plots. \\
         \addlinespace
         Keras / TensorFlow & Surveyed as the route to the temporal DL models that define the upper bound. & {\itshape +} the natural tool to close the FC gap. {\itshape --} out of scope here; left to future work. \\
@@ -102,14 +98,13 @@ role each played, and the practical strengths and limitations we observed.
 
 The central lesson from this tool survey is one of \emph{matching the
 representation to the task}. The scikit-learn / XGBoost path is outstanding for
-AD: fast, interpretable, and statistically honest under cross-validation. The
-dedicated time-series transforms (MiniRocket, tsfresh) promised to recover the
-temporal shape that FC needs, but in practice they inflated the feature space by
-one to two orders of magnitude while yielding only marginal FC improvement---a
-strong empirical signal that fault signatures are \emph{local} events that random
-or generic features dilute. That negative result is what points unambiguously
-toward locally restricted deep learning (Keras/TensorFlow), the one family of
-tools we surveyed but did not train, as the principled next step.
+AD: fast, interpretable, and statistically honest under cross-validation. For FC,
+however, even the most informative tabular representation (cross-physical
+Repr.~F\textsubscript{++}) plateaus well below the deep-learning reference,
+because global and segmented statistics discard the local temporal signatures
+that distinguish fault types. That ceiling is what points toward locally
+restricted deep learning (Keras/TensorFlow), the one family of tools we surveyed
+but did not train, as the principled next step.
 
 \subsection{Limitations}
 \label{subsec:limitations}
